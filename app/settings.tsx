@@ -1,9 +1,10 @@
-import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Alert } from 'react-native';
-import React, { useState } from 'react';
-import * as Linking from 'expo-linking';
-import Constants from 'expo-constants';
-import * as Location from 'expo-location';
 import { useAppTheme } from '@/context/ThemeContext';
+import Constants from 'expo-constants';
+import * as Linking from 'expo-linking';
+import * as Location from 'expo-location';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
 type Mode = 'Car' | 'Bike' | 'Walk' | 'Transit' | 'Carpool';
 type DistanceUnit = 'km' | 'miles';
@@ -11,6 +12,19 @@ type CarbonUnit = 'kg' | 'g';
 type Provider = 'Google Maps' | 'Mapbox' | 'OpenRouteService';
 
 export default function SettingsScreen() {
+  const router = useRouter();
+  // Logout handler: clear user data and go to login
+  const handleLogout = async () => {
+    try {
+      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+      await AsyncStorage.removeItem('APP_USERS_V1');
+      // Optionally clear other session keys here
+      Alert.alert('Logged out', 'You have been logged out.');
+      router.replace('/login');
+    } catch (e) {
+      Alert.alert('Logout failed', 'Could not log out.');
+    }
+  };
   const { theme, setTheme } = useAppTheme();
   const [preferredTravelMode, setPreferredTravelMode] = useState<Mode>('Car');
   const [unitsDistance, setUnitsDistance] = useState<DistanceUnit>('km');
@@ -152,6 +166,10 @@ export default function SettingsScreen() {
           <Text style={styles.itemTitle}>App Version</Text>
           <Text style={styles.muted}>{`v${version}${build ? ` (${build})` : ''}`}</Text>
         </View>
+        {/* Logout button */}
+        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#2563eb', marginTop: 12 }]} onPress={handleLogout}>
+          <Text style={styles.actionBtnText}>Logout</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
